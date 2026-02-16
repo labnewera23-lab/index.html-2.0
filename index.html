@@ -18,6 +18,7 @@ body{
     padding:20px;
 }
 h1{color:#ffd700;}
+
 #questionBox{
     background:#001f54;
     padding:25px;
@@ -25,11 +26,13 @@ h1{color:#ffd700;}
     font-size:24px;
     margin:25px 0;
 }
+
 .options{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:15px;
 }
+
 .option{
     background:#0b3d91;
     padding:18px;
@@ -39,6 +42,7 @@ h1{color:#ffd700;}
 }
 .correct{background:#00c853 !important;}
 .wrong{background:#d50000 !important;}
+
 #startBtn{
     padding:15px 40px;
     font-size:22px;
@@ -47,25 +51,33 @@ h1{color:#ffd700;}
     border-radius:10px;
     cursor:pointer;
 }
-#score{margin-top:20px;font-size:22px;color:#ffd700;}
+
+#score{
+    margin-top:20px;
+    font-size:22px;
+    color:#ffd700;
+}
 </style>
 </head>
 <body>
 
 <div class="container">
 <h1>KBC Quiz</h1>
+
 <button id="startBtn">Start Game</button>
+
 <div id="questionBox" style="display:none;"></div>
 <div class="options" id="options"></div>
 <div id="score">Score: 0</div>
 </div>
 
+<!-- Suspense Music -->
 <audio id="bgMusic" loop>
 <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_8b5a7b6d0c.mp3">
 </audio>
 
 <script>
-// QUESTIONS
+// ---------------- QUESTIONS ----------------
 let questions = [
 {q:"Which river flows through Nashik?", o:["Ganga","Godavari","Yamuna","Krishna"], a:1},
 {q:"Wine capital of India?", o:["Nashik","Pune","Delhi","Jaipur"], a:0},
@@ -76,40 +88,45 @@ let questions = [
 
 questions.sort(()=>Math.random()-0.5);
 
-// MUSIC
+// ---------------- MUSIC ----------------
 const music=document.getElementById("bgMusic");
 
-// VOICE SETUP
+// ---------------- VOICE SETUP ----------------
 let voices=[];
-speechSynthesis.onvoiceschanged=()=>{
-    voices=speechSynthesis.getVoices();
-};
+
+function loadVoices(){
+    voices = speechSynthesis.getVoices();
+}
+loadVoices();
+speechSynthesis.onvoiceschanged = loadVoices;
 
 function getVoice(){
     return (
         voices.find(v=>v.name.includes("George")) ||
         voices.find(v=>v.lang==="en-GB") ||
         voices.find(v=>v.lang==="en-IN") ||
+        voices.find(v=>v.lang.startsWith("en")) ||
         voices[0]
     );
 }
 
-// IMPORTANT: Speak with callback
 function speak(text, callback){
     speechSynthesis.cancel();
-    let msg=new SpeechSynthesisUtterance(text);
-    msg.voice=getVoice();
-    msg.rate=0.75;
-    msg.pitch=0.5;
 
-    msg.onend = () => {
+    let msg = new SpeechSynthesisUtterance(text);
+    msg.voice = getVoice();
+    msg.rate = 0.75;
+    msg.pitch = 0.6;
+    msg.volume = 1;
+
+    msg.onend = ()=>{
         if(callback) callback();
     };
 
     speechSynthesis.speak(msg);
 }
 
-// GAME
+// ---------------- GAME ----------------
 let index=0;
 let score=0;
 let locked=false;
@@ -134,7 +151,7 @@ function loadQuestion(){
         qBox.innerText="Game Over! Score: "+score;
         optBox.innerHTML="";
         music.pause();
-        speak("Game over. Your final score is "+score);
+        speak("Game over. Your final score is " + score);
         return;
     }
 
@@ -142,7 +159,7 @@ function loadQuestion(){
     qBox.innerText=q.q;
     optBox.innerHTML="";
 
-    speak("Here is your question. "+q.q);
+    speak("Here is your question. " + q.q);
 
     q.o.forEach((opt,i)=>{
         let btn=document.createElement("div");
@@ -163,25 +180,27 @@ function selectAnswer(btn,i){
     let correctAnswer=q.o[correctIndex];
     let options=document.getElementsByClassName("option");
 
+    // Highlight
     if(i===correctIndex){
         btn.classList.add("correct");
         score++;
-        scoreBox.innerText="Score: "+score;
-
-        speak(
-            "Computer ji, lock kiya jaye. That is correct.",
-            nextQuestion
-        );
-
     }else{
         btn.classList.add("wrong");
         options[correctIndex].classList.add("correct");
-
-        speak(
-            "Computer ji, lock kiya jaye. That is incorrect. The correct answer is " + correctAnswer,
-            nextQuestion
-        );
     }
+
+    scoreBox.innerText="Score: "+score;
+
+    // KBC drama sequence
+    speak("Computer ji, lock kiya jaye.", ()=>{
+        setTimeout(()=>{
+            if(i===correctIndex){
+                speak("Bilkul sahi jawab.", nextQuestion);
+            }else{
+                speak("Yeh galat jawab hai. Sahi jawab hai " + correctAnswer, nextQuestion);
+            }
+        },800);
+    });
 }
 
 function nextQuestion(){
@@ -189,7 +208,7 @@ function nextQuestion(){
         index++;
         music.play();
         loadQuestion();
-    },1000);
+    },1200);
 }
 </script>
 
