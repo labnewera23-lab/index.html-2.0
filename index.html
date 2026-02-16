@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>KBC Quiz</title>
+<title>KBC English Quiz</title>
 
 <style>
 body{
@@ -83,7 +83,8 @@ let questions = [
 {q:"Wine capital of India?", o:["Nashik","Pune","Delhi","Jaipur"], a:0},
 {q:"Capital of Maharashtra?", o:["Mumbai","Pune","Nagpur","Nashik"], a:0},
 {q:"Largest planet?", o:["Earth","Mars","Jupiter","Venus"], a:2},
-{q:"Fastest land animal?", o:["Tiger","Cheetah","Horse","Dog"], a:1}
+{q:"Fastest land animal?", o:["Tiger","Cheetah","Horse","Dog"], a:1},
+{q:"National animal of India?", o:["Lion","Tiger","Elephant","Leopard"], a:1}
 ];
 
 questions.sort(()=>Math.random()-0.5);
@@ -91,9 +92,8 @@ questions.sort(()=>Math.random()-0.5);
 // ---------------- MUSIC ----------------
 const music=document.getElementById("bgMusic");
 
-// ---------------- VOICE SETUP ----------------
+// ---------------- VOICE ----------------
 let voices=[];
-
 function loadVoices(){
     voices = speechSynthesis.getVoices();
 }
@@ -112,7 +112,6 @@ function getVoice(){
 
 function speak(text, callback){
     speechSynthesis.cancel();
-
     let msg = new SpeechSynthesisUtterance(text);
     msg.voice = getVoice();
     msg.rate = 0.75;
@@ -180,7 +179,6 @@ function selectAnswer(btn,i){
     let correctAnswer=q.o[correctIndex];
     let options=document.getElementsByClassName("option");
 
-    // Highlight
     if(i===correctIndex){
         btn.classList.add("correct");
         score++;
@@ -191,13 +189,13 @@ function selectAnswer(btn,i){
 
     scoreBox.innerText="Score: "+score;
 
-    // KBC drama sequence
-    speak("Computer ji, lock kiya jaye.", ()=>{
+    // English KBC Drama
+    speak("Computer, please lock the answer.", ()=>{
         setTimeout(()=>{
             if(i===correctIndex){
-                speak("Bilkul sahi jawab.", nextQuestion);
+                speak("That is absolutely correct.", nextQuestion);
             }else{
-                speak("Yeh galat jawab hai. Sahi jawab hai " + correctAnswer, nextQuestion);
+                speak("That is incorrect. The correct answer is " + correctAnswer, nextQuestion);
             }
         },800);
     });
