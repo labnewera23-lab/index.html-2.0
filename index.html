@@ -7,23 +7,17 @@
 <style>
 body{
     margin:0;
-    font-family:Arial, sans-serif;
-    background: radial-gradient(circle at center,#000428,#004e92);
+    font-family:Arial;
+    background: radial-gradient(circle,#000428,#004e92);
     color:white;
     text-align:center;
 }
-
 .container{
     max-width:900px;
     margin:auto;
     padding:20px;
 }
-
-h1{
-    font-size:38px;
-    color:#ffd700;
-}
-
+h1{color:#ffd700;}
 #questionBox{
     background:#001f54;
     padding:25px;
@@ -31,32 +25,20 @@ h1{
     font-size:24px;
     margin:25px 0;
 }
-
 .options{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:15px;
 }
-
 .option{
     background:#0b3d91;
     padding:18px;
     border-radius:12px;
     font-size:18px;
     cursor:pointer;
-    user-select:none;
 }
-
-.option:active{ transform:scale(0.97); }
-.correct{ background:#00c853 !important; }
-.wrong{ background:#d50000 !important; }
-
-#score{
-    margin-top:20px;
-    font-size:22px;
-    color:#ffd700;
-}
-
+.correct{background:#00c853 !important;}
+.wrong{background:#d50000 !important;}
 #startBtn{
     padding:15px 40px;
     font-size:22px;
@@ -65,15 +47,14 @@ h1{
     border-radius:10px;
     cursor:pointer;
 }
+#score{margin-top:20px;font-size:22px;color:#ffd700;}
 </style>
 </head>
 <body>
 
 <div class="container">
 <h1>KBC Quiz</h1>
-
 <button id="startBtn">Start Game</button>
-
 <div id="questionBox" style="display:none;"></div>
 <div class="options" id="options"></div>
 <div id="score">Score: 0</div>
@@ -90,12 +71,7 @@ let questions = [
 {q:"Wine capital of India?", o:["Nashik","Pune","Delhi","Jaipur"], a:0},
 {q:"Capital of Maharashtra?", o:["Mumbai","Pune","Nagpur","Nashik"], a:0},
 {q:"Largest planet?", o:["Earth","Mars","Jupiter","Venus"], a:2},
-{q:"Fastest land animal?", o:["Tiger","Cheetah","Horse","Dog"], a:1},
-{q:"India's national animal?", o:["Lion","Tiger","Elephant","Leopard"], a:1},
-{q:"Which festival is famous in Nashik?", o:["Kumbh Mela","Onam","Bihu","Pongal"], a:0},
-{q:"Sun rises in?", o:["West","East","North","South"], a:1},
-{q:"Currency of India?", o:["Dollar","Rupee","Euro","Yen"], a:1},
-{q:"Red planet?", o:["Mars","Earth","Saturn","Mercury"], a:0}
+{q:"Fastest land animal?", o:["Tiger","Cheetah","Horse","Dog"], a:1}
 ];
 
 questions.sort(()=>Math.random()-0.5);
@@ -103,29 +79,34 @@ questions.sort(()=>Math.random()-0.5);
 // MUSIC
 const music=document.getElementById("bgMusic");
 
-// DEEP VOICE
+// VOICE SETUP
 let voices=[];
 speechSynthesis.onvoiceschanged=()=>{
-voices=speechSynthesis.getVoices();
+    voices=speechSynthesis.getVoices();
 };
 
 function getVoice(){
-return (
-voices.find(v=>v.name.includes("George")) ||
-voices.find(v=>v.lang==="en-GB") ||
-voices.find(v=>v.lang==="en-IN") ||
-voices.find(v=>v.lang.startsWith("en")) ||
-voices[0]
-);
+    return (
+        voices.find(v=>v.name.includes("George")) ||
+        voices.find(v=>v.lang==="en-GB") ||
+        voices.find(v=>v.lang==="en-IN") ||
+        voices[0]
+    );
 }
 
-function speak(text){
-speechSynthesis.cancel();
-let msg=new SpeechSynthesisUtterance(text);
-msg.voice=getVoice();
-msg.rate=0.75;
-msg.pitch=0.5;
-speechSynthesis.speak(msg);
+// IMPORTANT: Speak with callback
+function speak(text, callback){
+    speechSynthesis.cancel();
+    let msg=new SpeechSynthesisUtterance(text);
+    msg.voice=getVoice();
+    msg.rate=0.75;
+    msg.pitch=0.5;
+
+    msg.onend = () => {
+        if(callback) callback();
+    };
+
+    speechSynthesis.speak(msg);
 }
 
 // GAME
@@ -139,71 +120,57 @@ const optBox=document.getElementById("options");
 const scoreBox=document.getElementById("score");
 
 startBtn.onclick=()=>{
-startBtn.style.display="none";
-qBox.style.display="block";
-music.volume=0.35;
-music.play().catch(()=>{});
-loadQuestion();
+    startBtn.style.display="none";
+    qBox.style.display="block";
+    music.volume=0.35;
+    music.play().catch(()=>{});
+    loadQuestion();
 };
 
 function loadQuestion(){
-locked=false;
+    locked=false;
 
-if(index>=questions.length){
-qBox.innerText="Game Over! Final Score: "+score;
-optBox.innerHTML="";
-music.pause();
-speak("Game over. Your final score is "+score);
-return;
-}
+    if(index>=questions.length){
+        qBox.innerText="Game Over! Score: "+score;
+        optBox.innerHTML="";
+        music.pause();
+        speak("Game over. Your final score is "+score);
+        return;
+    }
 
-let q=questions[index];
-qBox.innerText=q.q;
-optBox.innerHTML="";
+    let q=questions[index];
+    qBox.innerText=q.q;
+    optBox.innerHTML="";
 
-speak("Here is your question. "+q.q);
+    speak("Here is your question. "+q.q);
 
-q.o.forEach((opt,i)=>{
-let btn=document.createElement("div");
-btn.className="option";
-btn.innerText=opt;
-
-btn.onclick=()=>selectAnswer(btn,i);
-btn.addEventListener("touchstart",()=>selectAnswer(btn,i));
-
-optBox.appendChild(btn);
-});
+    q.o.forEach((opt,i)=>{
+        let btn=document.createElement("div");
+        btn.className="option";
+        btn.innerText=opt;
+        btn.onclick=()=>selectAnswer(btn,i);
+        optBox.appendChild(btn);
+    });
 }
 
 function selectAnswer(btn,i){
-if(locked) return;
-locked=true;
-music.pause();
+    if(locked) return;
+    locked=true;
+    music.pause();
 
-let q=questions[index];
-let correctIndex=q.a;
-let options=document.getElementsByClassName("option");
-let correctAnswer=q.o[correctIndex];
+    let q=questions[index];
+    let correctIndex=q.a;
+    let correctAnswer=q.o[correctIndex];
+    let options=document.getElementsByClassName("option");
 
-if(i===correctIndex){
-btn.classList.add("correct");
-score++;
-speak("Computer ji, lock kiya jaye. That is correct.");
-}else{
-btn.classList.add("wrong");
-options[correctIndex].classList.add("correct");
-speak("Computer ji, lock kiya jaye. That is incorrect. The correct answer is " + correctAnswer);
-}
+    if(i===correctIndex){
+        btn.classList.add("correct");
+        score++;
+        scoreBox.innerText="Score: "+score;
 
-scoreBox.innerText="Score: "+score;
+        speak(
+            "Computer ji, lock kiya jaye. That is correct.",
+            nextQuestion
+        );
 
-setTimeout(()=>{
-index++;
-music.play();
-loadQuestion();
-},3500);
-}
-</script>
-
-</body>
-</html>
+    }else{
