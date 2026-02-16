@@ -2,132 +2,176 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>KBC Quiz</title>
+<title>KBC Touch Quiz</title>
 
 <style>
 body{
-    background:#000428;
-    background:linear-gradient(to right,#004e92,#000428);
-    font-family:Arial;
+    margin:0;
+    font-family:Arial, sans-serif;
+    background: radial-gradient(circle at center,#000428,#004e92);
     color:white;
     text-align:center;
-    margin:0;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
     padding:20px;
 }
-h1{font-size:40px;}
 
-#question{
-    font-size:26px;
-    margin:30px 0;
+h1{
+    margin-top:10px;
+    font-size:40px;
+    color:#ffd700;
+}
+
+#questionBox{
+    background:#001f54;
+    padding:25px;
+    border-radius:15px;
+    font-size:24px;
+    margin:25px 0;
+    box-shadow:0 0 20px rgba(0,0,0,0.6);
+}
+
+.options{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
 }
 
 .option{
-    display:block;
-    background:#1e3c72;
-    margin:12px auto;
-    padding:15px;
-    width:60%;
-    border-radius:10px;
-    cursor:pointer;
+    background:#0b3d91;
+    padding:18px;
+    border-radius:12px;
     font-size:18px;
-    transition:0.3s;
+    cursor:pointer;
+    transition:0.2s;
+    user-select:none;
+    touch-action:manipulation;
+}
+
+.option:active{
+    transform:scale(0.97);
 }
 
 .option:hover{
-    background:#2a5298;
+    background:#1565c0;
 }
 
-.correct{background:green !important;}
-.wrong{background:red !important;}
+.correct{ background:#00c853 !important; }
+.wrong{ background:#d50000 !important; }
+
+#score{
+    margin-top:20px;
+    font-size:22px;
+    color:#ffd700;
+}
+
+#startBtn{
+    padding:15px 40px;
+    font-size:22px;
+    background:#ffd700;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
 </style>
 </head>
 <body>
 
-<h1>Kaun Banega Crorepati</h1>
-<div id="question">Click anywhere to start</div>
-<div id="options"></div>
-<h2 id="score">Score: 0</h2>
+<div class="container">
+    <h1>KBC Quiz</h1>
 
-<!-- Smooth suspense music -->
+    <button id="startBtn">Start Game</button>
+
+    <div id="questionBox" style="display:none;"></div>
+    <div class="options" id="options"></div>
+    <div id="score">Score: 0</div>
+</div>
+
+<!-- Better suspense music -->
 <audio id="bgMusic" loop>
-<source src="https://assets.mixkit.co/music/preview/mixkit-mysterious-suspense-116.mp3" type="audio/mpeg">
+<source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_8b5a7b6d0c.mp3?filename=suspense-ambience-110997.mp3">
 </audio>
 
 <script>
-// ------------------ QUESTIONS ------------------
+// ---------------- QUESTIONS ----------------
 let questions = [
 {q:"Which river flows through Nashik?", o:["Ganga","Godavari","Yamuna","Krishna"], a:1},
-{q:"Trimbakeshwar is famous for?", o:["Temple","Fort","Airport","Museum"], a:0},
-{q:"Capital of Maharashtra?", o:["Pune","Mumbai","Nagpur","Nashik"], a:1},
+{q:"Wine capital of India?", o:["Nashik","Pune","Delhi","Jaipur"], a:0},
+{q:"Capital of Maharashtra?", o:["Mumbai","Pune","Nagpur","Nashik"], a:0},
 {q:"Largest planet?", o:["Earth","Mars","Jupiter","Venus"], a:2},
-{q:"Who is Prime Minister of India (2025)?", o:["Modi","Rahul Gandhi","Shah","Yogi"], a:0},
+{q:"Fastest land animal?", o:["Tiger","Cheetah","Horse","Dog"], a:1},
 {q:"India's national animal?", o:["Lion","Tiger","Elephant","Leopard"], a:1},
-{q:"Which festival is famous in Nashik?", o:["Kumbh Mela","Diwali","Holi","Bihu"], a:0},
+{q:"Which festival is famous in Nashik?", o:["Kumbh Mela","Onam","Bihu","Pongal"], a:0},
 {q:"Sun rises in?", o:["West","East","North","South"], a:1},
-{q:"Which gas do plants take?", o:["Oxygen","Nitrogen","Carbon dioxide","Helium"], a:2},
 {q:"Currency of India?", o:["Dollar","Rupee","Euro","Yen"], a:1},
-{q:"Who wrote National Anthem?", o:["Tagore","Gandhi","Nehru","Kalam"], a:0},
-{q:"Which is a programming language?", o:["Python","Cobra","Lion","Tiger"], a:0},
-{q:"Which city is wine capital of India?", o:["Nashik","Pune","Delhi","Jaipur"], a:0},
-{q:"Which planet is red?", o:["Mars","Earth","Saturn","Mercury"], a:0},
-{q:"Fastest land animal?", o:["Cheetah","Tiger","Horse","Dog"], a:0},
+{q:"Red planet?", o:["Mars","Earth","Saturn","Mercury"], a:0}
 ];
 
-// Shuffle questions
 questions.sort(()=>Math.random()-0.5);
 
-// ------------------ MUSIC ------------------
+// ---------------- MUSIC ----------------
 const music = document.getElementById("bgMusic");
 
-document.body.addEventListener("click",()=>{
-    music.volume=0.25;
-    music.play().catch(()=>{});
-},{once:true});
-
-// ------------------ VOICE ------------------
+// ---------------- DEEP VOICE ----------------
 let voices=[];
-speechSynthesis.onvoiceschanged=()=>{
-    voices=speechSynthesis.getVoices();
+speechSynthesis.onvoiceschanged = ()=>{
+    voices = speechSynthesis.getVoices();
 };
+
+function getDeepVoice(){
+    return (
+        voices.find(v=>v.name.includes("George")) ||
+        voices.find(v=>v.lang==="en-GB") ||
+        voices.find(v=>v.lang==="en-IN") ||
+        voices.find(v=>v.lang.startsWith("en")) ||
+        voices[0]
+    );
+}
 
 function speak(text){
     speechSynthesis.cancel();
-    let msg=new SpeechSynthesisUtterance(text);
-
-    // Try deep male English voice
-    let voice =
-        voices.find(v=>v.name.toLowerCase().includes("male") && v.lang.includes("en")) ||
-        voices.find(v=>v.lang.includes("en-IN")) ||
-        voices.find(v=>v.lang.includes("en-GB")) ||
-        voices.find(v=>v.lang.includes("en-US")) ||
-        voices[0];
-
-    msg.voice=voice;
-    msg.rate=0.8;
-    msg.pitch=0.6; // deeper tone
+    let msg = new SpeechSynthesisUtterance(text);
+    msg.voice = getDeepVoice();
+    msg.rate = 0.75;
+    msg.pitch = 0.5;
     speechSynthesis.speak(msg);
 }
 
-// ------------------ GAME ------------------
+// ---------------- GAME ----------------
 let index=0;
 let score=0;
 let locked=false;
+
+const startBtn=document.getElementById("startBtn");
+const qBox=document.getElementById("questionBox");
+const optBox=document.getElementById("options");
+const scoreBox=document.getElementById("score");
+
+startBtn.onclick=()=>{
+    startBtn.style.display="none";
+    qBox.style.display="block";
+    music.volume=0.35;
+    music.play().catch(()=>{});
+    loadQuestion();
+};
 
 function loadQuestion(){
     locked=false;
 
     if(index>=questions.length){
-        document.getElementById("question").innerText="Game Over! Final Score: "+score;
-        document.getElementById("options").innerHTML="";
-        speak("Game over. Your final score is "+score);
+        qBox.innerText="Game Over! Final Score: "+score;
+        optBox.innerHTML="";
         music.pause();
+        speak("Game over. Your final score is "+score);
         return;
     }
 
     let q=questions[index];
-    document.getElementById("question").innerText=q.q;
-    let optDiv=document.getElementById("options");
-    optDiv.innerHTML="";
+    qBox.innerText=q.q;
+    optBox.innerHTML="";
 
     speak("Here is your question. "+q.q);
 
@@ -135,8 +179,12 @@ function loadQuestion(){
         let btn=document.createElement("div");
         btn.className="option";
         btn.innerText=opt;
-        btn.onclick=()=>selectAnswer(btn,i);
-        optDiv.appendChild(btn);
+
+        // TOUCH + CLICK support
+        btn.addEventListener("click",()=>selectAnswer(btn,i));
+        btn.addEventListener("touchstart",()=>selectAnswer(btn,i));
+
+        optBox.appendChild(btn);
     });
 }
 
@@ -151,29 +199,22 @@ function selectAnswer(btn,i){
     if(i===correct){
         btn.classList.add("correct");
         score++;
-        speak("Computer ji, lock kiya jaye. That is absolutely correct.");
+        speak("Computer ji, lock kiya jaye. That is correct.");
     }else{
         btn.classList.add("wrong");
         options[correct].classList.add("correct");
         speak("Computer ji, lock kiya jaye. That is incorrect.");
     }
 
-    document.getElementById("score").innerText="Score: "+score;
+    scoreBox.innerText="Score: "+score;
 
     setTimeout(()=>{
         index++;
         music.play();
         loadQuestion();
-    },3000);
+    },2500);
 }
-
-// Start first question after click
-document.body.addEventListener("click",()=>{
-    if(index===0 && document.getElementById("question").innerText.includes("Click")){
-        loadQuestion();
-    }
-},{once:true});
-
 </script>
+
 </body>
 </html>
