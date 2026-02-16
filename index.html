@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>KBC Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+body{
+    margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    background: radial-gradient(circle at top, #1b0040, #000);
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+#game{
+    width:90%;
+    max-width:700px;
+    background:rgba(255,255,255,0.08);
+    border-radius:25px;
+    padding:25px;
+    box-shadow:0 0 30px #7928ca;
+}
+h1{margin:0;color:#ffd700;text-shadow:0 0 10px gold;}
+#score{font-size:20px;color:#00ffcc;margin-bottom:10px;}
+#question{font-size:24px;margin:20px 0;min-height:70px;}
+
+.options{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+}
+.option{
+    background:linear-gradient(45deg,#7928ca,#ff0080);
+    border:none;
+    border-radius:15px;
+    padding:15px;
+    font-size:18px;
+    color:white;
+    cursor:pointer;
+}
+.option.correct{background:#00c853;}
+.option.wrong{background:#d50000;}
+
+#controls{
+    margin-top:15px;
+    display:flex;
+    justify-content:space-between;
+}
+button{
+    padding:10px 20px;
+    border:none;
+    border-radius:25px;
+    cursor:pointer;
+    font-weight:bold;
+}
+#nextBtn{background:#ffd700;color:black;display:none;}
+.lifeline{background:#00b0ff;color:white;}
+#pollBox{
+    margin-top:10px;
+    font-size:18px;
+    color:#ffd700;
+}
+</style>
+</head>
+<body>
+
+<div id="game">
+    <h1>🟡 KBC Pro</h1>
+    <div id="score">Score: 0</div>
+    <div id="question">Loading...</div>
+
+    <div class="options">
+        <button class="option" onclick="selectOption(0)"></button>
+        <button class="option" onclick="selectOption(1)"></button>
+        <button class="option" onclick="selectOption(2)"></button>
+        <button class="option" onclick="selectOption(3)"></button>
+    </div>
+
+    <div id="controls">
+        <div>
+            <button class="lifeline" onclick="use5050()">50:50</button>
+            <button class="lifeline" onclick="audiencePoll()">Audience</button>
+        </div>
+        <button id="nextBtn" onclick="nextQuestion()">Next</button>
+    </div>
+
+    <div id="pollBox"></div>
+</div>
+
+<script>
+// -------- SOUND ENGINE (simple beeps) --------
+const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playTone(freq, duration){
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.start();
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.stop(ctx.currentTime + duration);
+}
+
+function soundCorrect(){
+    playTone(600,0.1);
+    setTimeout(()=>playTone(800,0.1),120);
+}
+function soundWrong(){
+    playTone(200,0.3);
+}
+function soundQuestion(){
+    playTone(400,0.15);
+}
+
+// -------- GAME DATA --------
+let score = 0;
+let currentQ = 0;
+let locked = false;
+let used5050 = false;
+let usedPoll = false;
+
+const quiz = [
+{q:"How many continents are there?", options:["5","6","7","8"], ans:2},
+{q:"Capital of India?", options:["Mumbai","Delhi","New Delhi","Kolkata"], ans:2},
+{q:"Largest planet?", options:["Earth","Mars","Saturn","Jupiter"], ans:3},
+{q:"Father of Nation?", options:["Nehru","Gandhi","Bose","Patel"], ans:1},
+{q:"India independence year?", options:["1945","1947","1950","1930"], ans:1}
+];
+
+const qEl = document.getElementById("question");
+const opts = document.querySelectorAll(".option");
+const scoreEl = document.getElementById("score");
+const nextBtn = document.getElementById("nextBtn");
+const pollBox = document.getElementById("pollBox");
+
+// -------- LOAD QUESTION --------
+function loadQuestion(){
+    locked = false;
+    pollBox.innerHTML = "";
+    nextBtn.style.display="none";
+    opts.forEach(o=>{
+        o.style.display="block";
+        o.disabled=false;
+        o.className="option";
+    });
+
+    let q = quiz[currentQ];
+    qEl.innerText = q.q;
+    opts.forEach((o,i)=>o.innerText=q.options[i]);
+
+    soundQuestion();
+}
+loadQuestion();
+
+// -------- SELECT --------
+function selectOption(i){
+    if(locked) return;
+    locked = true;
+    opts.forEach(o=>o.disabled=true);
+
+    if(i === quiz[currentQ].ans){
+        opts[i].classList.add("correct");
+        score++;
+        scoreEl.innerText = "Score: " + score;
+        confetti({particleCount:120,spread:70});
+        soundCorrect();
+    }else{
+        opts[i].classList.add("wrong");
+        opts[quiz[currentQ].ans].classList.add("correct");
+        soundWrong();
+    }
+    nextBtn.style.display="block";
+}
+
+// -------- NEXT --------
+function nextQuestion(){
+    currentQ++;
+    if(currentQ >= quiz.length){
+        qEl.innerText = "🎉 Game Over! Final Score: " + score;
+        opts.forEach(o=>o.style.display="none");
+        nextBtn.style.display="none";
+        return;
+    }
+    loadQuestion();
+}
+
+// -------- LIFELINES --------
+function use5050(){
+    if(used5050) return;
+    used5050 = true;
+
+    let correct = quiz[currentQ].ans;
+    let removed = 0;
+
+    opts.forEach((o,i)=>{
+        if(i !== correct && removed < 2){
+            o.style.display="none";
+            removed++;
+        }
+    });
+}
+
+function audiencePoll(){
+    if(usedPoll) return;
+    usedPoll = true;
+
+    let correct = quiz[currentQ].ans;
+    let results = [];
+
+    for(let i=0;i<4;i++){
+        if(i === correct){
+            results.push(Math.floor(Math.random()*30)+40); // 40-70%
+        }else{
+            results.push(Math.floor(Math.random()*20)+5);
+        }
+    }
+
+    pollBox.innerHTML =
+        "Audience Poll:<br>" +
+        "A: "+results[0]+"% | " +
+        "B: "+results[1]+"% | " +
+        "C: "+results[2]+"% | " +
+        "D: "+results[3]+"%";
+}
+</script>
+
+</body>
+</html>
