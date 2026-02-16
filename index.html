@@ -174,3 +174,24 @@ function selectAnswer(btn,i){
         );
 
     }else{
+        btn.classList.add("wrong");
+        options[correctIndex].classList.add("correct");
+
+        speak(
+            "Computer ji, lock kiya jaye. That is incorrect. The correct answer is " + correctAnswer,
+            nextQuestion
+        );
+    }
+}
+
+function nextQuestion(){
+    setTimeout(()=>{
+        index++;
+        music.play();
+        loadQuestion();
+    },1000);
+}
+</script>
+
+</body>
+</html>
