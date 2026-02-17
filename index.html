@@ -87,7 +87,6 @@ button{
 </audio>
 
 <script>
-
 // Deep Male Voice
 function speak(text){
     let speech = new SpeechSynthesisUtterance(text);
@@ -102,6 +101,14 @@ function speak(text){
     speechSynthesis.speak(speech);
 }
 
+// Shuffle array helper
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
 // 50 Questions (GK + Nashik Alternate)
 let questions = [
 {q:"Which Indian state has the longest coastline?", options:["Gujarat","Maharashtra","Tamil Nadu","Andhra Pradesh"], answer:0},
@@ -114,7 +121,6 @@ let questions = [
 {q:"Main industrial area in Nashik?", options:["Satpur","Bandra","Andheri","Pune"], answer:0},
 {q:"Largest ocean?", options:["Pacific","Atlantic","Indian","Arctic"], answer:0},
 {q:"Which fruit is exported from Nashik?", options:["Grapes","Apple","Banana","Mango"], answer:0},
-
 {q:"Who discovered gravity?", options:["Newton","Einstein","Tesla","Galileo"], answer:0},
 {q:"Kumbh Mela occurs every?", options:["6 years","12 years","3 years","24 years"], answer:1},
 {q:"Gas plants absorb?", options:["Oxygen","CO2","Nitrogen","Hydrogen"], answer:1},
@@ -125,7 +131,6 @@ let questions = [
 {q:"Water supply dam for Nashik?", options:["Gangapur","Tehri","Bhakra","Hirakud"], answer:0},
 {q:"Largest desert?", options:["Sahara","Gobi","Thar","Kalahari"], answer:0},
 {q:"Hill station near Nashik?", options:["Igatpuri","Manali","Shimla","Ooty"], answer:0},
-
 {q:"National anthem writer?", options:["Tagore","Nehru","Gandhi","Bose"], answer:0},
 {q:"Wine tourism growing in?", options:["Nashik","Delhi","Jaipur","Goa"], answer:0},
 {q:"Hardest substance?", options:["Diamond","Iron","Gold","Silver"], answer:0},
@@ -136,7 +141,6 @@ let questions = [
 {q:"Expressway improving Nashik connectivity?", options:["Samruddhi","Yamuna","Eastern","NH44"], answer:0},
 {q:"Vitamin from sunlight?", options:["D","A","C","B12"], answer:0},
 {q:"GI product of Nashik?", options:["Grapes","Banana","Onion","Tomato"], answer:0},
-
 {q:"Land of Rising Sun?", options:["Japan","China","Korea","Thailand"], answer:0},
 {q:"Major highway Mumbai-Nashik?", options:["NH160","NH44","NH48","NH27"], answer:0},
 {q:"Brain balance part?", options:["Cerebellum","Cerebrum","Medulla","Spine"], answer:0},
@@ -147,7 +151,6 @@ let questions = [
 {q:"Major MIDC area?", options:["Ambad","Colaba","Dadar","Vashi"], answer:0},
 {q:"Which gas needed for breathing?", options:["Oxygen","Hydrogen","CO2","Nitrogen"], answer:0},
 {q:"Religious circuit of Nashik?", options:["Ramayana","Buddhist","Sufi","Coastal"], answer:0},
-
 {q:"Silicon Valley of India?", options:["Bangalore","Pune","Hyderabad","Chennai"], answer:0},
 {q:"Gangapur lake used for?", options:["Water supply","Fishing","Transport","Power"], answer:0},
 {q:"Metal liquid at room temp?", options:["Mercury","Iron","Copper","Aluminium"], answer:0},
@@ -181,31 +184,36 @@ function nextQuestion(){
     current = index;
 
     let q = questions[index];
+
+    // Create a copy of options with correct answer
+    let opts = q.options.map((opt, idx)=>({text: opt, correct: idx === q.answer}));
+    shuffleArray(opts); // Shuffle options
+
     document.getElementById("question").innerText = q.q;
     document.getElementById("status").innerText = "";
     
     let optionsHTML = "";
-    q.options.forEach((opt,i)=>{
-        optionsHTML += `<div class="option" onclick="selectAnswer(${i}, this)">${opt}</div>`;
+    opts.forEach((opt,i)=>{
+        optionsHTML += `<div class="option" onclick="selectAnswerShuffled(${i}, this, ${opts.map(o=>o.correct)})">${opt.text}</div>`;
     });
     document.getElementById("options").innerHTML = optionsHTML;
 
     speak(q.q);
 }
 
-function selectAnswer(i, element){
-    let q = questions[current];
+function selectAnswerShuffled(i, element, correctArray){
     let options = document.querySelectorAll(".option");
 
     options.forEach(o=>o.onclick=null);
 
-    if(i === q.answer){
+    if(correctArray[i]){
         element.classList.add("correct");
         document.getElementById("status").innerText="Correct Answer!";
         speak("Computer ji, lock kiya jaye. That is the correct answer.");
     }else{
         element.classList.add("wrong");
-        options[q.answer].classList.add("correct");
+        // Highlight the correct answer
+        options[correctArray.indexOf(true)].classList.add("correct");
         document.getElementById("status").innerText="Wrong Answer!";
         speak("That is the wrong answer.");
     }
