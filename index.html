@@ -3,77 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <title>KBC Nashik Edition</title>
-
 <style>
-body{
-    margin:0;
-    font-family:Arial;
-    background:#000814;
-    color:white;
-    text-align:center;
-}
-
-h1{
-    color:#ffd60a;
-    margin-top:10px;
-}
-
-#game{
-    max-width:700px;
-    margin:auto;
-    padding:20px;
-}
-
-#question{
-    font-size:24px;
-    margin:30px 0;
-    min-height:80px;
-}
-
-.option{
-    background:#001d3d;
-    border:2px solid #ffd60a;
-    padding:15px;
-    margin:10px;
-    border-radius:12px;
-    cursor:pointer;
-    font-size:18px;
-    transition:0.3s;
-}
-
-.option:hover{
-    background:#003566;
-}
-
-.correct{
-    background:green !important;
-}
-
-.wrong{
-    background:red !important;
-}
-
-#status{
-    font-size:20px;
-    margin-top:20px;
-    color:#ffd60a;
-}
-
-button{
-    padding:12px 30px;
-    font-size:18px;
-    border:none;
-    border-radius:10px;
-    background:#ffd60a;
-    cursor:pointer;
-}
+body{margin:0;font-family:Arial;background:#000814;color:white;text-align:center;}
+h1{color:#ffd60a;margin-top:10px;}
+#game{max-width:700px;margin:auto;padding:20px;}
+#question{font-size:24px;margin:30px 0;min-height:80px;}
+.option{background:#001d3d;border:2px solid #ffd60a;padding:15px;margin:10px;border-radius:12px;cursor:pointer;font-size:18px;transition:0.3s;}
+.option:hover{background:#003566;}
+.correct{background:green !important;}
+.wrong{background:red !important;}
+#status{font-size:20px;margin-top:20px;color:#ffd60a;}
+button{padding:12px 30px;font-size:18px;border:none;border-radius:10px;background:#ffd60a;cursor:pointer;}
 </style>
 </head>
-
 <body>
 
 <h1>🎤 KBC Nashik Edition</h1>
-
 <div id="game">
     <div id="question">Press Start</div>
     <div id="options"></div>
@@ -106,7 +51,7 @@ function shuffleArray(array) {
     }
 }
 
-// All 50 Questions (GK + Nashik)
+// 50 Questions
 let questions = [
 {q:"Which Indian state has the longest coastline?", options:["Gujarat","Maharashtra","Tamil Nadu","Andhra Pradesh"], answer:0},
 {q:"Which river flows through Nashik?", options:["Godavari","Krishna","Tapi","Narmada"], answer:0},
@@ -147,7 +92,7 @@ let questions = [
 {q:"Godavari originates at?", options:["Trimbak","Pune","Nagpur","Mumbai"], answer:0},
 {q:"Earthquake device?", options:["Seismograph","Barometer","Thermometer","Altimeter"], answer:0},
 {q:"Popular trekking fort near Nashik?", options:["Harihar","Raigad","Sinhagad","Pratapgad"], answer:0},
-{q:"Which country largest population?", options:["India","China","USA","Indonesia"], answer:0},
+{q:"Which country has largest population?", options:["India","China","USA","Indonesia"], answer:1},
 {q:"Major MIDC area?", options:["Ambad","Colaba","Dadar","Vashi"], answer:0},
 {q:"Which gas needed for breathing?", options:["Oxygen","Hydrogen","CO2","Nitrogen"], answer:0},
 {q:"Religious circuit of Nashik?", options:["Ramayana","Buddhist","Sufi","Coastal"], answer:0},
@@ -160,15 +105,23 @@ let questions = [
 {q:"Tourist festival in vineyards?", options:["Wine festival","Flower show","Food fair","Trade expo"], answer:0}
 ];
 
+// Shuffle options once per question
+questions.forEach(q=>{
+    let opts = q.options.map((opt, idx)=>({text:opt, correct:idx===q.answer}));
+    shuffleArray(opts);
+    q.shuffledOptions = opts;
+    q.correctIndex = opts.findIndex(o=>o.correct);
+});
+
 let current = 0;
 
 function startGame(){
     document.querySelector("button").style.display="none";
     document.getElementById("bgm").play();
-    nextQuestion();
+    showQuestion();
 }
 
-function nextQuestion(){
+function showQuestion(){
     if(current >= questions.length){
         speak("Congratulations. You have completed all questions.");
         document.getElementById("question").innerText="Game Completed!";
@@ -176,40 +129,36 @@ function nextQuestion(){
     }
 
     let q = questions[current];
-    current++;
-
-    // Shuffle options but keep track of correct answer
-    let opts = q.options.map((opt, idx)=>({text: opt, correct: idx === q.answer}));
-    shuffleArray(opts);
-
     document.getElementById("question").innerText = q.q;
     document.getElementById("status").innerText = "";
 
     let optionsHTML = "";
-    opts.forEach((opt,i)=>{
-        optionsHTML += `<div class="option" onclick="selectAnswer(${i}, this, ${opts.map(o=>o.correct)})">${opt.text}</div>`;
+    q.shuffledOptions.forEach((opt,i)=>{
+        optionsHTML += `<div class="option" onclick="checkAnswer(${i}, this)">${opt.text}</div>`;
     });
     document.getElementById("options").innerHTML = optionsHTML;
 
     speak(q.q);
 }
 
-function selectAnswer(i, element, correctArray){
+function checkAnswer(i, element){
+    let q = questions[current];
     let options = document.querySelectorAll(".option");
     options.forEach(o=>o.onclick=null);
 
-    if(correctArray[i]){
+    if(i === q.correctIndex){
         element.classList.add("correct");
         document.getElementById("status").innerText="Correct Answer!";
         speak("Computer ji, lock kiya jaye. That is the correct answer.");
     }else{
         element.classList.add("wrong");
-        options[correctArray.indexOf(true)].classList.add("correct");
+        options[q.correctIndex].classList.add("correct");
         document.getElementById("status").innerText="Wrong Answer!";
         speak("That is the wrong answer.");
     }
 
-    setTimeout(nextQuestion, 4000);
+    current++;
+    setTimeout(showQuestion, 4000);
 }
 </script>
 
