@@ -81,21 +81,19 @@ button{
     <button onclick="startGame()">Start Game</button>
 </div>
 
-<!-- Suspense Music -->
 <audio id="bgm" loop>
 <source src="https://cdn.pixabay.com/audio/2022/10/25/audio_4f4bba3c5a.mp3">
 </audio>
+
 <script>
 // Deep Male Voice
 function speak(text){
     let speech = new SpeechSynthesisUtterance(text);
     speech.rate = 0.9;
     speech.pitch = 0.7;
-
     let voices = speechSynthesis.getVoices();
     let maleVoice = voices.find(v => v.name.toLowerCase().includes("male") || v.name.toLowerCase().includes("david") || v.name.toLowerCase().includes("english"));
     if(maleVoice) speech.voice = maleVoice;
-
     speechSynthesis.cancel();
     speechSynthesis.speak(speech);
 }
@@ -108,8 +106,61 @@ function shuffleArray(array) {
     }
 }
 
+// All 50 Questions (GK + Nashik)
+let questions = [
+{q:"Which Indian state has the longest coastline?", options:["Gujarat","Maharashtra","Tamil Nadu","Andhra Pradesh"], answer:0},
+{q:"Which river flows through Nashik?", options:["Godavari","Krishna","Tapi","Narmada"], answer:0},
+{q:"Father of Indian Constitution?", options:["Gandhi","Ambedkar","Nehru","Patel"], answer:1},
+{q:"Trimbakeshwar temple is dedicated to?", options:["Shiva","Vishnu","Ganesh","Hanuman"], answer:0},
+{q:"Red planet?", options:["Mars","Venus","Saturn","Jupiter"], answer:0},
+{q:"Nashik is famous for?", options:["Wine","Tea","Coffee","Spices"], answer:0},
+{q:"SI unit of current?", options:["Volt","Ampere","Watt","Ohm"], answer:1},
+{q:"Main industrial area in Nashik?", options:["Satpur","Bandra","Andheri","Pune"], answer:0},
+{q:"Largest ocean?", options:["Pacific","Atlantic","Indian","Arctic"], answer:0},
+{q:"Which fruit is exported from Nashik?", options:["Grapes","Apple","Banana","Mango"], answer:0},
+
+{q:"Who discovered gravity?", options:["Newton","Einstein","Tesla","Galileo"], answer:0},
+{q:"Kumbh Mela occurs every?", options:["6 years","12 years","3 years","24 years"], answer:1},
+{q:"Gas plants absorb?", options:["Oxygen","CO2","Nitrogen","Hydrogen"], answer:1},
+{q:"Nashik airport name?", options:["Ozar","Mumbai","Pune","Nagpur"], answer:0},
+{q:"Smallest continent?", options:["Australia","Europe","Antarctica","Africa"], answer:0},
+{q:"Ramkund located in?", options:["Panchavati","Igatpuri","Sinnar","Satana"], answer:0},
+{q:"Universal donor?", options:["O-","AB+","A+","B-"], answer:0},
+{q:"Water supply dam for Nashik?", options:["Gangapur","Tehri","Bhakra","Hirakud"], answer:0},
+{q:"Largest desert?", options:["Sahara","Gobi","Thar","Kalahari"], answer:0},
+{q:"Hill station near Nashik?", options:["Igatpuri","Manali","Shimla","Ooty"], answer:0},
+
+{q:"National anthem writer?", options:["Tagore","Nehru","Gandhi","Bose"], answer:0},
+{q:"Wine tourism growing in?", options:["Nashik","Delhi","Jaipur","Goa"], answer:0},
+{q:"Hardest substance?", options:["Diamond","Iron","Gold","Silver"], answer:0},
+{q:"Pandavleni caves are?", options:["Buddhist","Mughal","British","Maratha"], answer:0},
+{q:"Largest planet?", options:["Jupiter","Mars","Earth","Saturn"], answer:0},
+{q:"Military area near Nashik?", options:["Deolali","Ambad","Satpur","Sinnar"], answer:0},
+{q:"Blood purifier organ?", options:["Kidney","Heart","Lungs","Brain"], answer:0},
+{q:"Expressway improving Nashik connectivity?", options:["Samruddhi","Yamuna","Eastern","NH44"], answer:0},
+{q:"Vitamin from sunlight?", options:["D","A","C","B12"], answer:0},
+{q:"GI product of Nashik?", options:["Grapes","Banana","Onion","Tomato"], answer:0},
+
+{q:"Land of Rising Sun?", options:["Japan","China","Korea","Thailand"], answer:0},
+{q:"Major highway Mumbai-Nashik?", options:["NH160","NH44","NH48","NH27"], answer:0},
+{q:"Brain balance part?", options:["Cerebellum","Cerebrum","Medulla","Spine"], answer:0},
+{q:"Godavari originates at?", options:["Trimbak","Pune","Nagpur","Mumbai"], answer:0},
+{q:"Earthquake device?", options:["Seismograph","Barometer","Thermometer","Altimeter"], answer:0},
+{q:"Popular trekking fort near Nashik?", options:["Harihar","Raigad","Sinhagad","Pratapgad"], answer:0},
+{q:"Which country largest population?", options:["India","China","USA","Indonesia"], answer:0},
+{q:"Major MIDC area?", options:["Ambad","Colaba","Dadar","Vashi"], answer:0},
+{q:"Which gas needed for breathing?", options:["Oxygen","Hydrogen","CO2","Nitrogen"], answer:0},
+{q:"Religious circuit of Nashik?", options:["Ramayana","Buddhist","Sufi","Coastal"], answer:0},
+
+{q:"Silicon Valley of India?", options:["Bangalore","Pune","Hyderabad","Chennai"], answer:0},
+{q:"Gangapur lake used for?", options:["Water supply","Fishing","Transport","Power"], answer:0},
+{q:"Metal liquid at room temp?", options:["Mercury","Iron","Copper","Aluminium"], answer:0},
+{q:"Rapid residential area?", options:["Pathardi","Colaba","Dadar","Worli"], answer:0},
+{q:"Chandrayaan-3 landed on?", options:["Moon south pole","Mars","Sun orbit","Asteroid"], answer:0},
+{q:"Tourist festival in vineyards?", options:["Wine festival","Flower show","Food fair","Trade expo"], answer:0}
+];
+
 let current = 0;
-let used = [];
 
 function startGame(){
     document.querySelector("button").style.display="none";
@@ -118,23 +169,16 @@ function startGame(){
 }
 
 function nextQuestion(){
-    if(used.length === questions.length){
+    if(current >= questions.length){
         speak("Congratulations. You have completed all questions.");
         document.getElementById("question").innerText="Game Completed!";
         return;
     }
 
-    let index;
-    do{
-        index = Math.floor(Math.random()*questions.length);
-    }while(used.includes(index));
+    let q = questions[current];
+    current++;
 
-    used.push(index);
-    current = index;
-
-    let q = questions[index];
-
-    // Shuffle options and track correct answer
+    // Shuffle options but keep track of correct answer
     let opts = q.options.map((opt, idx)=>({text: opt, correct: idx === q.answer}));
     shuffleArray(opts);
 
@@ -143,14 +187,14 @@ function nextQuestion(){
 
     let optionsHTML = "";
     opts.forEach((opt,i)=>{
-        optionsHTML += `<div class="option" onclick="selectAnswerShuffled(${i}, this, ${opts.map(o=>o.correct)})">${opt.text}</div>`;
+        optionsHTML += `<div class="option" onclick="selectAnswer(${i}, this, ${opts.map(o=>o.correct)})">${opt.text}</div>`;
     });
     document.getElementById("options").innerHTML = optionsHTML;
 
     speak(q.q);
 }
 
-function selectAnswerShuffled(i, element, correctArray){
+function selectAnswer(i, element, correctArray){
     let options = document.querySelectorAll(".option");
     options.forEach(o=>o.onclick=null);
 
@@ -168,5 +212,6 @@ function selectAnswerShuffled(i, element, correctArray){
     setTimeout(nextQuestion, 4000);
 }
 </script>
+
 </body>
 </html>
